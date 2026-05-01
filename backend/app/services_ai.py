@@ -50,6 +50,20 @@ async def generate_sop(name: str, program: str, university_type: str, achievemen
 
 async def mentor_reply(message: str, context: dict | None = None) -> str:
     context_str = context or {}
+    if not get_settings().gemini_api_key:
+        stage = str(context_str.get("stage", "planning"))
+        program = str(context_str.get("program", context_str.get("target", "your program")))
+        budget = context_str.get("budget") or context_str.get("budget_usd")
+        countries = context_str.get("preferred_countries") or context_str.get("countries") or []
+        country_text = ", ".join(countries) if countries else "your preferred destinations"
+        reply_parts = [
+            f"You are in the {stage} stage for {program}.",
+            f"Keep your shortlist aligned with {country_text} and a realistic budget.",
+        ]
+        if budget:
+            reply_parts.append(f"Your current budget signal is about ${budget}.")
+        reply_parts.append("Next steps: compare fit, funding, deadlines, and one backup option before you commit.")
+        return " ".join(reply_parts)
     prompt = f"""
     You are GradPath AI Mentor, helping students with study abroad planning.
     Be specific, practical, and encouraging.
