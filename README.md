@@ -5,6 +5,7 @@ A full-stack AI-powered platform helping students discover universities, evaluat
 ## ✅ Implemented Features
 
 ### Core Functionality
+
 - ✅ **Authentication & Profile**: Register, login, persistent sessions, editable profiles
 - ✅ **Onboarding & Personas**: Quick-start demo personas (Aarav, Meera, Riya)
 - ✅ **Dashboard**: Personalized home screen with stats, activity, quick actions
@@ -18,12 +19,14 @@ A full-stack AI-powered platform helping students discover universities, evaluat
 - ✅ **Admin Management**: Full CRUD for universities, loans, nudges; demo reset; dashboard
 
 ### Data & Persistence
+
 - ✅ **SQLAlchemy ORM**: Models for Users, Universities, LoanOffers, Nudges, SessionTokens
 - ✅ **SQLite Default**: Works out-of-box; Postgres-compatible via `DATABASE_URL`
 - ✅ **Best-Effort DB**: All operations try DB first, fall back to in-memory
 - ✅ **Idempotent Seeding**: `/admin/init-db` creates tables and seeds demo data
 
 ### Accessibility & UX
+
 - ✅ **Keyboard Navigation**: Tab, Enter, Arrow keys fully supported
 - ✅ **ARIA Labels**: Interactive elements labeled for screen readers
 - ✅ **Focus Indicators**: 2px outlined focus with offset
@@ -32,6 +35,7 @@ A full-stack AI-powered platform helping students discover universities, evaluat
 - ✅ **Reduced Motion**: @media prefers-reduced-motion support
 
 ### Testing & QA
+
 - ✅ **Backend Unit Tests**: 20+ test cases in `backend/test_app.py`
 - ✅ **E2E Checklist**: Comprehensive verification steps in docs
 - ✅ **Build Validation**: TypeScript + Vite production build verified
@@ -52,6 +56,7 @@ A full-stack AI-powered platform helping students discover universities, evaluat
 ## 🚀 Quick Start
 
 ### Backend
+
 ```bash
 cd backend
 pip install -r requirements.txt
@@ -59,6 +64,7 @@ uvicorn app.main:app --reload --port 8000
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm install
@@ -66,6 +72,7 @@ npm run dev  # http://localhost:5173
 ```
 
 ### Initialize DB (Optional)
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/admin/init-db
 ```
@@ -143,16 +150,16 @@ Full API docs: `http://localhost:8000/docs`
 
 ## 📦 Deliverables
 
-| File | Status | Details |
-|------|--------|---------|
-| `FEATURES.md` | ✅ | Complete feature spec with acceptance criteria |
-| `README.md` | ✅ | This setup guide |
-| `VERIFICATION.md` | ✅ | E2E test checklist (see docs section) |
-| `backend/` | ✅ | FastAPI app, models, services, tests |
-| `frontend/` | ✅ | React tabbed workspace, admin CRUD UI |
-| `docker-compose.yml` | ✅ | Docker services (backend, frontend) |
-| `backend/requirements.txt` | ✅ | Python dependencies |
-| `frontend/package.json` | ✅ | Node dependencies |
+| File                       | Status | Details                                        |
+| -------------------------- | ------ | ---------------------------------------------- |
+| `FEATURES.md`              | ✅     | Complete feature spec with acceptance criteria |
+| `README.md`                | ✅     | This setup guide                               |
+| `VERIFICATION.md`          | ✅     | E2E test checklist (see docs section)          |
+| `backend/`                 | ✅     | FastAPI app, models, services, tests           |
+| `frontend/`                | ✅     | React tabbed workspace, admin CRUD UI          |
+| `docker-compose.yml`       | ✅     | Docker services (backend, frontend)            |
+| `backend/requirements.txt` | ✅     | Python dependencies                            |
+| `frontend/package.json`    | ✅     | Node dependencies                              |
 
 ---
 

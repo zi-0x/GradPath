@@ -3,6 +3,7 @@
 Use this checklist before a demo or handoff.
 
 ## Local Startup
+
 1. Start the backend.
    - `cd backend`
    - `pip install -r requirements.txt`
@@ -14,6 +15,7 @@ Use this checklist before a demo or handoff.
 3. Open the frontend in a browser and confirm the auth landing page loads.
 
 ## Core End-to-End Checks
+
 1. Auth and profile
    - Register a new user or activate a seeded persona.
    - Log in and confirm the session persists after a browser refresh.
@@ -54,12 +56,14 @@ Use this checklist before a demo or handoff.
    - Verify the demo state is restored.
 
 ## Expected Demo Data
+
 - Seed personas: Aarav, Meera, and Riya.
 - Universities: Toronto, TU Munich, Melbourne, ASU, UCD, and NUS.
 - Loan offers: three seeded lender options.
 - Nudges: scholarship, deadline, and funding reminders.
 
 ## Useful Endpoints
+
 - Auth: `/api/v1/auth/register`, `/api/v1/auth/login`
 - Profile: `/api/v1/users/me`
 - Discovery: `/api/v1/universities`
