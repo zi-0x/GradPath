@@ -1,189 +1,124 @@
-# GradPath — Complete Feature Implementation
+# GradPath
 
-A full-stack AI-powered platform helping students discover universities, evaluate financing options, receive personalized recommendations and nudges, and interact with an AI Copilot assistant to guide decisions.
+GradPath is a full-stack AI-assisted platform for university discovery, financing checks, personalized recommendations, nudges, and an in-app Copilot assistant.
 
-## ✅ Implemented Features
+## What is included
 
-### Core Functionality
+- Authentication, profiles, and persistent sessions
+- Demo personas for quick setup: Aarav, Meera, and Riya
+- University discovery with search, filters, shortlist, and details
+- Recommendations based on profile inputs such as CGPA, GRE, budget, and preferred countries
+- Financing tools including loan eligibility, EMI planning, and loan offers
+- Nudges and growth tracking
+- Copilot chat with context-aware responses and prompt chips
+- Admin CRUD for universities, loan offers, and nudges
+- SQLite by default, with Postgres support through `DATABASE_URL`
+- Backend unit tests and a production frontend build
 
-- ✅ **Authentication & Profile**: Register, login, persistent sessions, editable profiles
-- ✅ **Onboarding & Personas**: Quick-start demo personas (Aarav, Meera, Riya)
-- ✅ **Dashboard**: Personalized home screen with stats, activity, quick actions
-- ✅ **University Discovery**: Search, filter, detail view, shortlist (6 universities)
-- ✅ **Recommendations Engine**: AI-powered matches based on profile (CGPA, GRE, budget, etc.)
-- ✅ **Search & Filters**: Advanced filtering by country, program, ranking, ROI
-- ✅ **Financing & Loans**: Eligibility check, offer comparison, accept flow
-- ✅ **Nudges & Growth OS**: Personalized reminders and milestone tracking
-- ✅ **Copilot Assistant**: AI chatbot with context-aware responses, prompt chips
-- ✅ **Notifications & Actions**: Real-time badges, action buttons, activity feed
-- ✅ **Admin Management**: Full CRUD for universities, loans, nudges; demo reset; dashboard
+## Quick start
 
-### Data & Persistence
+### 1. Backend
 
-- ✅ **SQLAlchemy ORM**: Models for Users, Universities, LoanOffers, Nudges, SessionTokens
-- ✅ **SQLite Default**: Works out-of-box; Postgres-compatible via `DATABASE_URL`
-- ✅ **Best-Effort DB**: All operations try DB first, fall back to in-memory
-- ✅ **Idempotent Seeding**: `/admin/init-db` creates tables and seeds demo data
+From the repo root:
 
-### Accessibility & UX
-
-- ✅ **Keyboard Navigation**: Tab, Enter, Arrow keys fully supported
-- ✅ **ARIA Labels**: Interactive elements labeled for screen readers
-- ✅ **Focus Indicators**: 2px outlined focus with offset
-- ✅ **Touch Targets**: Min 44px on buttons/inputs
-- ✅ **High Contrast Mode**: @media prefers-contrast support
-- ✅ **Reduced Motion**: @media prefers-reduced-motion support
-
-### Testing & QA
-
-- ✅ **Backend Unit Tests**: 20+ test cases in `backend/test_app.py`
-- ✅ **E2E Checklist**: Comprehensive verification steps in docs
-- ✅ **Build Validation**: TypeScript + Vite production build verified
-
----
-
-## 🏗️ Technology Stack
-
-- **Frontend**: React 18 + TypeScript + Vite (production build: 227KB JS, 10.5KB CSS)
-- **Backend**: FastAPI + SQLAlchemy ORM + Pydantic v2
-- **Database**: SQLite (default) / Postgres
-- **AI**: Gemini API (optional; deterministic fallback)
-- **Session**: `X-Session-Token` header with crypto-secure tokens
-- **Deployment**: Docker Compose (included)
-
----
-
-## 🚀 Quick Start
-
-### Backend
-
-```bash
+```powershell
 cd backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-### Frontend
+Backend URL:
 
-```bash
+- API: http://127.0.0.1:8000
+- Docs: http://127.0.0.1:8000/docs
+
+### 2. Frontend
+
+In a second terminal:
+
+```powershell
 cd frontend
 npm install
-npm run dev  # http://localhost:5173
+npm run dev
 ```
 
-### Initialize DB (Optional)
+Frontend URL:
 
-```bash
-curl -X POST http://localhost:8000/api/v1/admin/init-db
+- App: http://localhost:5173
+
+### 3. Optional DB seed
+
+If you want to recreate the demo data in the database:
+
+```powershell
+Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/admin/init-db
 ```
 
----
+## Recommended run order
 
-## ✅ E2E Test Checklist
+1. Start the backend first.
+2. Start the frontend second.
+3. Open the frontend and activate a demo persona or register a new account.
+4. Try Discover, Finance, Growth, Copilot, and Admin.
 
-1. **Auth**: Register → Login → Session persists → Logout
-2. **Profile**: Activate persona → Edit profile → Updates sync to recommendations
-3. **Discovery**: Search → Filter → Sort → Shortlist → View details
-4. **Recommendations**: Generate → View scores → Shortlist from card
-5. **Finance**: Check eligibility → View offers → Accept (status changes)
-6. **Nudges**: View list → Mark read → Count updates
-7. **Copilot**: Ask question → Get response → Follow-up uses context
-8. **Admin**: Dashboard stats → CRUD universities/loans/nudges → Reset demo
-9. **Persistence**: Data survives backend restart
-10. **Accessibility**: Tab navigation, focus indicators, ARIA labels
+## Verification
 
----
+Run backend tests from the backend folder:
 
-## 📊 Demo Data
-
-**Personas**: Aarav (CS, budget $45K), Meera (Data Science, $52K), Riya (MBA, $60K)
-**Universities**: Toronto, TUM, Melbourne, ASU, Dublin, NUS
-**Loan Offers**: 3 templates (GlobalEdu, Nova, FuturePath)
-**Nudges**: Scholarship alerts, deadline reminders, funding insights
-
----
-
-## 🔧 Configuration
-
-```bash
-# Backend
-export DATABASE_URL=sqlite:///./gradpath.db  # or postgres://...
-export GEMINI_API_KEY=your_key_here  # optional
-
-# Frontend
-VITE_API_BASE_URL=http://localhost:8000/api/v1
-```
-
----
-
-## 🧪 Testing
-
-```bash
+```powershell
 cd backend
-pytest test_app.py -v  # Run 20+ unit tests
+pytest -q
 ```
 
----
+Build the frontend for production from the frontend folder:
 
-## 📝 API Endpoints
+```powershell
+cd frontend
+npm run build
+```
 
-**Auth**: `POST /auth/register`, `/auth/login`, `/demo/personas/{id}/activate`
-**Profile**: `GET /users/me`, `PATCH /users/me`
-**Discovery**: `GET /universities`, `/universities/{id}`, `POST /universities/{id}/shortlist`
-**Recommendations**: `POST /recommendations/generate`, `GET /recommendations/me`
-**Finance**: `POST /loan/eligibility`, `GET /loan/offers`, `POST /loan/offers/{id}/accept`
-**Nudges**: `GET /nudges/me`, `POST /nudges/{id}/read`
-**Admin**: `GET /admin/universities`, `POST /admin/universities`, `PATCH /admin/universities/{id}`, etc.
+## Demo data
 
-Full API docs: `http://localhost:8000/docs`
+- Personas: Aarav, Meera, Riya
+- Universities: Toronto, TU Munich, Melbourne, ASU, Dublin, NUS
+- Loan offers: three seeded lender options
+- Nudges: scholarship, deadline, and funding reminders
 
----
+## Configuration
 
-## 🔐 Security (Current: Demo)
+Set these environment variables if you need non-default behavior:
 
-- ✅ Crypto-secure token generation
-- ⚠️ Passwords stored plain-text (use bcrypt in production)
-- ⚠️ No HTTPS (use TLS in production)
-- 📋 **Production checklist**: JWT + refresh, password hashing, CORS hardening, rate limiting, CSRF protection
+- `DATABASE_URL`: `sqlite:///./gradpath.db` or a Postgres connection string
+- `GEMINI_API_KEY`: optional, for AI-backed Copilot responses
+- `VITE_API_BASE_URL`: defaults to `http://localhost:8000/api/v1`
 
----
+Example PowerShell session:
 
-## 📦 Deliverables
+```powershell
+$env:DATABASE_URL = 'sqlite:///./gradpath.db'
+$env:GEMINI_API_KEY = 'your_key_here'
+$env:VITE_API_BASE_URL = 'http://localhost:8000/api/v1'
+```
 
-| File                       | Status | Details                                        |
-| -------------------------- | ------ | ---------------------------------------------- |
-| `FEATURES.md`              | ✅     | Complete feature spec with acceptance criteria |
-| `README.md`                | ✅     | This setup guide                               |
-| `VERIFICATION.md`          | ✅     | E2E test checklist (see docs section)          |
-| `backend/`                 | ✅     | FastAPI app, models, services, tests           |
-| `frontend/`                | ✅     | React tabbed workspace, admin CRUD UI          |
-| `docker-compose.yml`       | ✅     | Docker services (backend, frontend)            |
-| `backend/requirements.txt` | ✅     | Python dependencies                            |
-| `frontend/package.json`    | ✅     | Node dependencies                              |
+## Docker
 
----
+Start both services with:
 
-## 📖 Documentation
+```powershell
+docker-compose up --build
+```
 
-- [Features Specification](./FEATURES.md) — MVP features, user flows, acceptance criteria
-- [Verification Guide](./VERIFICATION.md) — Step-by-step E2E test walkthrough
-- [Architecture Notes](./backend/README.md) — Backend structure (if present)
+Backend: http://127.0.0.1:8000
 
----
+Frontend: http://localhost:5173
 
-## 🚧 Future Enhancements
+## Troubleshooting
 
-- Real Postgres + Alembic migrations
-- JWT refresh token flow
-- Multi-user analytics dashboard
-- Celery background tasks for nudge scheduling
-- Mobile app (React Native)
-- Multi-language support
-- Integration with real education databases
-- ML-powered personalization
+- If `uvicorn` cannot import `app`, make sure you run it from the `backend` folder.
+- If the frontend cannot reach the API, confirm the backend is still running on port 8000.
+- If the frontend shows stale data, refresh the page after activating a persona or resetting demo data.
 
----
+## Notes
 
-**Status**: MVP Feature-Complete ✅ | Production-Ready: Partial ⚠️
-
-- Add background workers (Celery/RQ) for OCR and report generation
+- Passwords are stored in plain text for demo purposes only.
+- Production hardening is still needed before real deployment: HTTPS, password hashing, refresh tokens, and rate limiting.
