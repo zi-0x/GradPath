@@ -18,3 +18,4 @@ coverage/
 data/uploads/*
 !data/uploads/.gitkeep
 logs/
+*.db
