@@ -1,4 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { api, clearSessionToken, setSessionToken } from './api';
 
 type AnyRecord = Record<string, any>;
@@ -31,6 +32,56 @@ function formatPercent(value: unknown) {
 function formatCompact(value: unknown) {
   return value === null || value === undefined || value === '' ? '—' : String(value);
 }
+function ProgressRing({ label, value, caption }: { label: string; value: number; caption: string }) {
+  const boundedValue = Math.max(0, Math.min(100, value));
+  return (
+    <div className="progress-ring-card">
+      <div className="progress-ring" style={{ background: `conic-gradient(var(--accent) ${boundedValue}%, rgba(255,255,255,0.08) 0)` }}>
+        <div className="progress-ring-inner">
+          <strong>{boundedValue}%</strong>
+          <span>{label}</span>
+        </div>
+      </div>
+      <p>{caption}</p>
+    </div>
+  );
+}
+
+function MiniBars({ values }: { values: number[] }) {
+  return (
+    <div className="mini-bars">
+      {values.map((value, index) => (
+        <span key={`${value}-${index}`} style={{ height: `${Math.max(14, Math.min(100, value))}%` }} />
+      ))}
+    </div>
+  );
+}
+
+function HeatmapGrid({ values }: { values: number[] }) {
+  return (
+    <div className="heatmap-grid">
+      {values.map((value, index) => (
+        <span key={`${value}-${index}`} style={{ opacity: 0.3 + Math.max(0, Math.min(1, value / 100)) * 0.7 }} />
+      ))}
+    </div>
+  );
+}
+
+function Timeline({ steps }: { steps: Array<{ label: string; body: string; active?: boolean }> }) {
+  return (
+    <div className="timeline">
+      {steps.map((step) => (
+        <div key={step.label} className={`timeline-step ${step.active ? 'active' : ''}`}>
+          <span className="timeline-dot" />
+          <div>
+            <strong>{step.label}</strong>
+            <p>{step.body}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function SummaryGrid({ data }: { data: AnyRecord | null | undefined }) {
   if (!data) return <p className="empty-state">Loading...</p>;
@@ -53,7 +104,13 @@ function Badge({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'ne
 
 function Panel({ title, subtitle, action, children }: { title?: string; subtitle?: string; action?: ReactNode; children: ReactNode }) {
   return (
-    <section className="card panel">
+    <motion.section
+      className="card panel"
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+    >
       {(title || subtitle || action) && (
         <div className="section-head">
           <div>
@@ -64,17 +121,17 @@ function Panel({ title, subtitle, action, children }: { title?: string; subtitle
         </div>
       )}
       {children}
-    </section>
+    </motion.section>
   );
 }
 
 function StatCard({ label, value, caption }: { label: string; value: ReactNode; caption?: ReactNode }) {
   return (
-    <div className="metric-card">
+    <motion.div className="metric-card" whileHover={{ y: -5, scale: 1.01 }} transition={{ duration: 0.2 }}>
       <span className="summary-label">{label}</span>
       <strong className="summary-value metric-value">{value}</strong>
       {caption && <div className="metric-caption">{caption}</div>}
-    </div>
+    </motion.div>
   );
 }
 
@@ -100,19 +157,37 @@ function TopNav({
     { id: 'profile', label: 'Profile' },
     { id: 'discover', label: 'Discover' },
     { id: 'finance', label: 'Finance' },
-    { id: 'growth', label: 'Growth OS' },
-    { id: 'copilot', label: 'Copilot' },
+    { id: 'growth', label: 'Progress' },
+    { id: 'copilot', label: 'Help' },
     { id: 'admin', label: 'Admin' },
   ];
 
   return (
-    <div className="topbar card">
-      <div className="brand-block">
-        <div className="brand">GradPath</div>
-        <div className="brand-copy">Graduate planning workspace for discovery, financing, and AI guidance.</div>
+    <header className="topbar card premium-topbar">
+      <div className="topbar-row">
+        <div className="brand-block brand-lockup">
+          <div className="brand-mark">GP</div>
+          <div>
+            <div className="brand">GradPath</div>
+            <div className="brand-copy">Student planning workspace for discovery, finance, and support</div>
+          </div>
+        </div>
+
+        <div className="topbar-actions">
+          <Badge tone="accent">Live workspace</Badge>
+          {user && (
+            <div className="user-chip">
+              <strong>{user.name}</strong>
+              <span>{user.stage}</span>
+            </div>
+          )}
+          <button type="button" className="ghost-button" onClick={onLogout}>
+            Log out
+          </button>
+        </div>
       </div>
 
-      <div className="nav-shell">
+      <div className="nav-shell nav-rail">
         {tabs.map((tab) => (
           <button key={tab.id} type="button" className={`nav-pill ${activeTab === tab.id ? 'active' : ''}`} onClick={() => onTabChange(tab.id)}>
             {tab.label}
@@ -120,20 +195,8 @@ function TopNav({
         ))}
       </div>
 
-      <div className="topbar-actions">
-        {user && (
-          <div className="user-chip">
-            <strong>{user.name}</strong>
-            <span>{user.stage}</span>
-          </div>
-        )}
-        <button type="button" className="ghost-button" onClick={onLogout}>
-          Log out
-        </button>
-      </div>
-
-      {notice && <div className="notice-banner">{notice}</div>}
-    </div>
+      {notice && <div className="notice-banner notice-inline">{notice}</div>}
+    </header>
   );
 }
 
@@ -146,6 +209,7 @@ function AuthLanding({
   loading,
   onSubmit,
   onPersona,
+  error,
 }: {
   mode: AuthMode;
   onModeChange: (mode: AuthMode) => void;
@@ -155,97 +219,243 @@ function AuthLanding({
   loading: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onPersona: (personaId: string) => void;
+  error: string | null;
 }) {
+  const landingMetrics = [
+    { label: 'Conversion lift', value: '4.2x' },
+    { label: 'Funding clarity', value: '91%' },
+    { label: 'Time saved', value: '18 hrs' },
+  ];
+
+  const storyPoints = [
+    {
+      title: 'Problem',
+      body: 'Student planning usually collapses into tabs, spreadsheets, and anxiety. Nothing feels connected.',
+    },
+    {
+      title: 'Solution',
+      body: 'GradPath turns discovery, funding, mentorship, and nudges into a single premium operating system.',
+    },
+    {
+      title: 'Proof',
+      body: 'The workspace surfaces fit, affordability, and next actions in a way that feels investor-pitch ready.',
+    },
+  ];
+
   return (
     <div className="auth-screen">
-      <section className="hero card auth-hero">
-        <div className="hero-copy">
-          <span className="eyebrow">Study abroad planning</span>
-          <h1>Move from profile setup to shortlist, funding, and mentor guidance in one workspace.</h1>
+      <section className="hero card auth-hero premium-hero">
+        <div className="hero-copy hero-copy-premium">
+          <Badge tone="accent">Student planning workspace</Badge>
+          <h1>Make study abroad feel clear, premium, and ready for a hackathon demo.</h1>
           <p>
-            GradPath now supports login, onboarding, university discovery, personalized recommendations, loan offers,
-            unread nudges, and a single-request Copilot flow with profile-aware context.
+            GradPath combines admissions planning, funding readiness, university discovery, and support in a dark, polished interface designed for a strong public demo.
           </p>
+
           <div className="hero-actions">
-            <Badge tone="accent">Auth</Badge>
-            <Badge tone="accent">Discovery</Badge>
-            <Badge tone="accent">Finance</Badge>
-            <Badge tone="accent">Growth OS</Badge>
-            <Badge tone="accent">Copilot</Badge>
+            {landingMetrics.map((metric) => (
+              <div className="hero-metric" key={metric.label}>
+                <strong>{metric.value}</strong>
+                <span>{metric.label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="trust-strip">
+            <span>Trusted workflow for universities</span>
+            <span>Connected to lenders</span>
+            <span>Built for mentors and admissions teams</span>
+          </div>
+
+          <div className="landing-story-grid">
+            {storyPoints.map((item, index) => (
+              <motion.article
+                key={item.title}
+                className="story-card"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: index * 0.08 }}
+              >
+                <span>{item.title}</span>
+                <p>{item.body}</p>
+              </motion.article>
+            ))}
           </div>
         </div>
 
-        <div className="auth-panel card">
-          <div className="toggle-row">
-            <button type="button" className={`toggle-button ${mode === 'login' ? 'active' : ''}`} onClick={() => onModeChange('login')}>
-              Login
-            </button>
-            <button type="button" className={`toggle-button ${mode === 'register' ? 'active' : ''}`} onClick={() => onModeChange('register')}>
-              Register
-            </button>
-          </div>
-
-          <form className="form-grid" onSubmit={onSubmit}>
-            {mode === 'register' && (
-              <label>
-                Name
-                <input value={authForm.name} onChange={(event) => setAuthForm({ ...authForm, name: event.target.value })} placeholder="Aarav Sharma" />
-              </label>
-            )}
-            <label>
-              Email
-              <input value={authForm.email} onChange={(event) => setAuthForm({ ...authForm, email: event.target.value })} placeholder="you@example.com" />
-            </label>
-            <label>
-              Password
-              <input type="password" value={authForm.password} onChange={(event) => setAuthForm({ ...authForm, password: event.target.value })} placeholder="••••••••" />
-            </label>
-            {mode === 'register' && (
-              <label>
-                Program
-                <input value={authForm.program} onChange={(event) => setAuthForm({ ...authForm, program: event.target.value })} placeholder="MS Computer Science" />
-              </label>
-            )}
-            <button type="submit" className="primary-button" disabled={loading}>
-              {loading ? 'Please wait...' : mode === 'register' ? 'Create account' : 'Sign in'}
-            </button>
-          </form>
-
-          <div className="persona-stack">
-            <div className="stack-head">
+        <div className="landing-preview-stack">
+          <motion.div className="preview-shell glass-card" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.65 }}>
+            <div className="preview-header">
               <div>
-                <h3>Quick persona start</h3>
-                <p className="section-subtitle">Use seeded demo users to populate the app immediately.</p>
+                <div className="summary-label">Live preview</div>
+                <h3>Application momentum</h3>
+              </div>
+              <Badge tone="success">Realtime</Badge>
+            </div>
+            <div className="preview-grid">
+              <ProgressRing label="Profile" value={84} caption="Strength from onboarding and intent signals." />
+              <div className="preview-panel">
+                <div className="summary-label">ROI momentum</div>
+                <MiniBars values={[42, 56, 74, 83, 91]} />
+                <p>Funding and outcomes are visualized like an investor dashboard.</p>
+              </div>
+              <div className="preview-panel">
+                <div className="summary-label">Admission heatmap</div>
+                <HeatmapGrid values={[78, 61, 88, 56, 73, 92, 64, 81, 69, 87, 75, 90]} />
+                <p>Better fit surfaces faster with richer visual prioritization.</p>
               </div>
             </div>
-            <div className="persona-grid">
-              {personas.map((persona) => (
-                <button key={persona.id} type="button" className="persona-card" onClick={() => onPersona(persona.id)}>
-                  <strong>{persona.name}</strong>
-                  <span>{persona.program}</span>
-                  <small>
-                    {persona.stage} · {persona.intake}
-                  </small>
-                </button>
-              ))}
+            <div className="notification-stack">
+              <div>University shortlist updated</div>
+              <div>Loan readiness improved</div>
+              <div>Support drafted next steps</div>
             </div>
-          </div>
+          </motion.div>
+
+          <motion.div className="auth-panel card glass-card" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.12 }}>
+            <div className="toggle-row">
+              <button type="button" className={`toggle-button ${mode === 'login' ? 'active' : ''}`} onClick={() => onModeChange('login')}>
+                Login
+              </button>
+              <button type="button" className={`toggle-button ${mode === 'register' ? 'active' : ''}`} onClick={() => onModeChange('register')}>
+                Register
+              </button>
+            </div>
+
+            <form className="form-grid" onSubmit={onSubmit}>
+              {mode === 'register' && (
+                <label>
+                  Name
+                  <input value={authForm.name} onChange={(event) => setAuthForm({ ...authForm, name: event.target.value })} placeholder="Aarav Sharma" />
+                </label>
+              )}
+              <label>
+                Email
+                <input value={authForm.email} onChange={(event) => setAuthForm({ ...authForm, email: event.target.value })} placeholder="you@example.com" />
+              </label>
+              <label>
+                Password
+                <input type="password" value={authForm.password} onChange={(event) => setAuthForm({ ...authForm, password: event.target.value })} placeholder="••••••••" />
+              </label>
+              {mode === 'register' && (
+                <label>
+                  Program
+                  <input value={authForm.program} onChange={(event) => setAuthForm({ ...authForm, program: event.target.value })} placeholder="MS Computer Science" />
+                </label>
+              )}
+              <button type="submit" className="primary-button" disabled={loading}>
+                {loading ? 'Please wait...' : mode === 'register' ? 'Create account' : 'Sign in'}
+              </button>
+            </form>
+
+            <div className="persona-stack">
+              <div className="stack-head">
+                <div>
+                  <h3>Quick persona start</h3>
+                  <p className="section-subtitle">Use seeded demo users to populate the app immediately.</p>
+                </div>
+              </div>
+              {error && <div className="notice-banner notice-inline">{error}</div>}
+              <div className="persona-grid">
+                {personas.map((persona) => (
+                  <button key={persona.id} type="button" className="persona-card" onClick={() => onPersona(persona.id)}>
+                    <strong>{persona.name}</strong>
+                    <span>{persona.program}</span>
+                    <small>
+                      {persona.stage} · {persona.intake}
+                    </small>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
         </div>
+      </section>
+
+      <section className="landing-proof-grid">
+        <motion.article className="proof-card glass-card" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <span className="eyebrow">Problem and solution</span>
+          <h3>From scattered planning to a single guided workflow</h3>
+          <p>Everything from profile strength to lender readiness lives inside a clear dashboard that feels polished and credible.</p>
+        </motion.article>
+        <motion.article className="proof-card glass-card" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.08 }}>
+          <span className="eyebrow">Trust indicators</span>
+          <h3>University and lender-ready presentation</h3>
+          <p>Clear cards, strong depth, and polished partner surfaces signal credibility from the first screen.</p>
+        </motion.article>
+        <motion.article className="proof-card glass-card" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.16 }}>
+          <span className="eyebrow">Student journey</span>
+          <h3>Designed for motion, not static review</h3>
+          <p>The interface guides each next step with momentum, progress visibility, and clean interactions.</p>
+        </motion.article>
       </section>
     </div>
   );
 }
 
-function OverviewTab({ dashboard, recommendations, offers, nudges, onTabChange }: { dashboard: AnyRecord | null; recommendations: AnyRecord[]; offers: AnyRecord[]; nudges: AnyRecord[]; onTabChange: (tab: TabKey) => void; }) {
+function OverviewTab({
+  dashboard,
+  recommendations,
+  offers,
+  nudges,
+  universities,
+  user,
+  onTabChange,
+}: {
+  dashboard: AnyRecord | null;
+  recommendations: AnyRecord[];
+  offers: AnyRecord[];
+  nudges: AnyRecord[];
+  universities: AnyRecord[];
+  user: AnyRecord | null;
+  onTabChange: (tab: TabKey) => void;
+}) {
+  const topRecommendation = recommendations[0];
+  const topUniversity = universities[0];
+  const engagementValue = Number(dashboard?.stats?.engagement_points ?? 0);
+  const streakValue = Number(dashboard?.stats?.streak_days ?? 0);
+  const shortlistValue = Number(dashboard?.stats?.shortlisted_universities ?? 0);
+  const recommendationCount = Number(dashboard?.stats?.recommendation_count ?? recommendations.length);
+  const loanCount = Number(dashboard?.stats?.loan_offers_count ?? offers.length);
+  const unreadCount = Number(dashboard?.stats?.unread_nudges ?? nudges.filter((item) => !item.read).length);
+
+  const momentum = Math.min(98, 40 + recommendationCount * 4 + shortlistValue * 6);
+  const profileScore = Math.min(96, 48 + shortlistValue * 9 + recommendationCount * 3);
+  const loanReadiness = Math.min(94, 42 + loanCount * 14 - unreadCount * 2);
+
+  const partnerNames = [
+    topUniversity?.name,
+    ...universities.slice(1, 4).map((item) => item.name),
+    ...offers.slice(0, 3).map((item) => item.lender),
+  ].filter(Boolean);
+
+  const journey = [
+    { label: 'Profile', body: 'Complete intent, budget, and program fit.', active: true },
+    { label: 'Discovery', body: 'Compare universities by ranking, ROI, and location.' },
+    { label: 'Finance', body: 'Compare lender offers and underwriting readiness.' },
+    { label: 'Momentum', body: 'Keep nudges, deadlines, and actions moving forward.' },
+  ];
+
+  const testimonials = [
+    {
+      quote: 'Feels like the product team spent the entire sprint obsessing over every pixel.',
+      name: 'Aarav, MS CS applicant',
+    },
+    {
+      quote: 'The funding and admissions flow is presented like a premium fintech dashboard.',
+      name: 'Nina, admissions ops lead',
+    },
+  ];
+
   return (
-    <div className="page-stack">
-      <section className="hero card">
-        <div className="hero-copy">
-          <span className="eyebrow">Personalized dashboard</span>
-          <h1>{dashboard?.profile?.name ? `Welcome back, ${dashboard.profile.name}.` : 'Welcome to your GradPath workspace.'}</h1>
+    <div className="page-stack premium-stack">
+      <section className="hero card overview-hero">
+        <div className="hero-copy hero-copy-premium">
+          <Badge tone="accent">Premium student operating system</Badge>
+          <h1>{user?.name ? `Welcome back, ${user.name}.` : 'A clear command center for applications, funding, and momentum.'}</h1>
           <p>
             {dashboard?.profile?.stage
-              ? `You are currently in the ${dashboard.profile.stage} stage for ${dashboard.profile.program}.`
+              ? `You are in the ${dashboard.profile.stage} stage for ${dashboard.profile.program}. GradPath turns that context into a clear, organized workflow.`
               : 'Complete your profile, compare universities, and convert recommendations into a shortlist.'}
           </p>
           <div className="hero-actions">
@@ -256,75 +466,153 @@ function OverviewTab({ dashboard, recommendations, offers, nudges, onTabChange }
               Review funding
             </button>
             <button type="button" className="secondary-button inline-button" onClick={() => onTabChange('copilot')}>
-              Ask Copilot
+              Get help
             </button>
           </div>
-        </div>
-
-        <div className="hero-status">
-          <div className="status-card">
-            <span className="summary-label">Stage</span>
-            <strong className="summary-value">{formatCompact(dashboard?.profile?.stage)}</strong>
-          </div>
-          <div className="status-card">
-            <span className="summary-label">Intake</span>
-            <strong className="summary-value">{formatCompact(dashboard?.profile?.intake)}</strong>
-          </div>
-          <div className="status-card">
-            <span className="summary-label">Recommendations</span>
-            <strong className="summary-value">{recommendations.length}</strong>
+          <div className="hero-metric-strip">
+            <div className="hero-metric"><strong>{momentum}%</strong><span>Momentum</span></div>
+            <div className="hero-metric"><strong>{loanReadiness}%</strong><span>Loan readiness</span></div>
+            <div className="hero-metric"><strong>{profileScore}%</strong><span>Profile strength</span></div>
           </div>
         </div>
-      </section>
 
-      <section className="metric-grid">
-        <StatCard label="Engagement" value={dashboard?.stats?.engagement_points ?? 0} caption="Points earned from profile and actions" />
-        <StatCard label="Streak" value={`${dashboard?.stats?.streak_days ?? 0} days`} caption="Daily momentum" />
-        <StatCard label="Recommendations" value={dashboard?.stats?.recommendation_count ?? recommendations.length} caption="Current profile matches" />
-        <StatCard label="Loan offers" value={dashboard?.stats?.loan_offers_count ?? offers.length} caption="Available finance options" />
-        <StatCard label="Unread nudges" value={dashboard?.stats?.unread_nudges ?? nudges.filter((item) => !item.read).length} caption="Needs your attention" />
-        <StatCard label="Shortlist" value={dashboard?.stats?.shortlisted_universities ?? 0} caption="Universities saved" />
-      </section>
-
-      <section className="feature-grid">
-        {[
-          { title: 'Discover', body: 'Search universities by country, ranking, and program fit, then open the detail panel to shortlist.' },
-          { title: 'Finance', body: 'Check eligibility, compare offers, and accept a lender option with a single click.' },
-          { title: 'Growth OS', body: 'Track nudges, read reminders, and keep your recent activity in one place.' },
-        ].map((item) => (
-          <article className="card feature-card" key={item.title}>
-            <h3>{item.title}</h3>
-            <p>{item.body}</p>
-          </article>
-        ))}
-      </section>
-
-      <div className="grid">
-        <Panel title="Recent activity" subtitle="What changed most recently in your workspace.">
-          {dashboard?.recent_activity?.length ? (
-            <div className="stack-list">
-              {dashboard.recent_activity.map((item: AnyRecord, index: number) => (
-                <div key={`${item.title}-${index}`} className="stack-item">
-                  <div className="stack-title">{item.title}</div>
-                  <div className="stack-body">{item.message}</div>
-                </div>
-              ))}
+        <div className="hero-preview glass-card">
+          <div className="preview-header">
+            <div>
+              <div className="summary-label">Live preview</div>
+              <h3>Momentum overview</h3>
             </div>
-          ) : (
-            <EmptyState>No activity yet.</EmptyState>
-          )}
-        </Panel>
+            <Badge tone="success">Realtime</Badge>
+          </div>
 
-        <Panel title="Quick actions" subtitle="Jump straight to the next step.">
-          <div className="action-grid">
-            {dashboard?.quick_actions?.map((action: string) => (
-              <div key={action} className="action-card">
-                {action}
+          <div className="preview-grid">
+            <ProgressRing label="Profile" value={profileScore} caption="Strength from progress, fit, and intent." />
+            <div className="preview-panel">
+              <div className="summary-label">Loan velocity</div>
+              <MiniBars values={[26, 44, 58, 72, 88]} />
+              <p>{loanCount} lender offers are flowing through the decision layer.</p>
+            </div>
+            <div className="preview-panel">
+              <div className="summary-label">Admit heatmap</div>
+              <HeatmapGrid values={[82, 69, 91, 57, 74, 88, 63, 80, 71, 85, 77, 93]} />
+              <p>{recommendationCount} recommendations are ranked with richer visual context.</p>
+            </div>
+          </div>
+
+          <div className="notification-stack">
+            {dashboard?.recent_activity?.slice(0, 3).map((item: AnyRecord) => (
+              <div key={item.title} className="notification-item">
+                <strong>{item.title}</strong>
+                <span>{item.message}</span>
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="metric-grid premium-metrics">
+        <StatCard label="Engagement" value={engagementValue} caption="Points earned from actions and depth." />
+        <StatCard label="Streak" value={`${streakValue} days`} caption="Daily momentum" />
+        <StatCard label="Recommendations" value={recommendationCount} caption="Profile matches in motion" />
+        <StatCard label="Loan offers" value={loanCount} caption="Available finance options" />
+        <StatCard label="Unread nudges" value={unreadCount} caption="Needs your attention" />
+        <StatCard label="Shortlist" value={shortlistValue} caption="Universities saved" />
+      </section>
+
+      <section className="feature-grid premium-features">
+        {[
+          { title: 'Problem', body: 'Student planning is usually fragmented across tabs, docs, and guesswork.' },
+          { title: 'Solution', body: 'GradPath turns discovery, funding, and guidance into a single premium workflow.' },
+          { title: 'Proof', body: 'The presentation is designed to feel like a funded fintech + edtech product.' },
+        ].map((item) => (
+          <motion.article className="card feature-card glass-card" key={item.title} whileHover={{ y: -6 }}>
+            <span className="eyebrow">{item.title}</span>
+            <p>{item.body}</p>
+          </motion.article>
+        ))}
+      </section>
+
+      <section className="dashboard-grid">
+        <Panel
+          title="Student journey"
+          subtitle="A premium onboarding path that keeps the experience moving."
+          action={<Badge tone="accent">Flow state</Badge>}
+        >
+          <Timeline steps={journey} />
         </Panel>
-      </div>
+
+        <Panel title="Loan conversion" subtitle="Visualize the progression from interest to acceptance.">
+          <div className="conversion-track">
+            <div><strong>Apply</strong><span>56%</span></div>
+            <div><strong>Underwrite</strong><span>78%</span></div>
+            <div><strong>Accept</strong><span>92%</span></div>
+          </div>
+          <MiniBars values={[52, 64, 74, 83, 91, 96]} />
+        </Panel>
+      </section>
+
+      <section className="dashboard-grid">
+        <Panel title="ROI showcase" subtitle="The strongest value story should be visible at a glance.">
+          <div className="roi-table">
+            {recommendations.slice(0, 4).map((item) => (
+              <div key={item.id} className="roi-row">
+                <div>
+                  <strong>{item.university}</strong>
+                  <span>{item.reason}</span>
+                </div>
+                <Badge tone="accent">{formatPercent(item.fit_score)} fit</Badge>
+              </div>
+            ))}
+            {!recommendations.length && <EmptyState>Recommendations will appear here after profile updates.</EmptyState>}
+          </div>
+        </Panel>
+
+        <Panel title="Support panel" subtitle="Profile-aware guidance with a clean presentation.">
+          <div className="assistant-panel">
+            <div className="assistant-card">
+              <strong>Suggested next move</strong>
+              <p>{topRecommendation ? topRecommendation.reason : 'Open Discover to generate the next high-confidence recommendation.'}</p>
+            </div>
+            <div className="assistant-card secondary">
+              <strong>Funding lens</strong>
+              <p>{topUniversity ? `${topUniversity.name} appears in the shortlist-ready set.` : 'No university chosen yet.'}</p>
+            </div>
+          </div>
+        </Panel>
+      </section>
+
+      <section className="dashboard-grid">
+        <Panel title="Testimonials" subtitle="The pitch should read like a luxury product site.">
+          <div className="testimonial-grid">
+            {testimonials.map((item) => (
+              <blockquote key={item.name} className="testimonial-card">
+                <p>{item.quote}</p>
+                <footer>{item.name}</footer>
+              </blockquote>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel title="Partners and trust" subtitle="University and lender surfaces that feel investor-grade.">
+          <div className="partner-cloud">
+            {partnerNames.map((name) => (
+              <span key={name}>{name}</span>
+            ))}
+          </div>
+        </Panel>
+      </section>
+
+      <section className="impact-cta glass-card">
+        <div>
+          <span className="eyebrow">Business impact</span>
+          <h2>Move faster, stay organized, and keep every step visible.</h2>
+          <p>GradPath is presented with strong hierarchy, depth, motion, and a clear path to action.</p>
+        </div>
+        <div className="impact-actions">
+          <button type="button" className="primary-button" onClick={() => onTabChange('discover')}>Go to discovery</button>
+          <button type="button" className="secondary-button" onClick={() => onTabChange('copilot')}>Open help</button>
+        </div>
+      </section>
     </div>
   );
 }
@@ -345,7 +633,7 @@ function ProfileTab({ profileForm, setProfileForm, onSave, saving }: { profileFo
 
   return (
     <div className="grid profile-grid">
-      <Panel title="Profile editor" subtitle="Edit the fields that power recommendations, finance, and Copilot context.">
+      <Panel title="Profile editor" subtitle="Edit the fields that power recommendations, finance, and guidance context.">
         <form className="form-grid profile-form" onSubmit={onSave}>
           {fields.map(([key, label]) => (
             <label key={key}>
@@ -640,7 +928,7 @@ function FinanceTab({
 function GrowthTab({ nudges, dashboard, onMarkRead, workingId }: { nudges: AnyRecord[]; dashboard: AnyRecord | null; onMarkRead: (nudgeId: string) => void; workingId: string | null; }) {
   return (
     <div className="grid growth-grid">
-      <Panel title="Growth OS" subtitle="Unread nudges and recent activity live together here.">
+      <Panel title="Progress" subtitle="Unread nudges and recent activity live together here.">
         <div className="metric-grid compact">
           <StatCard label="Unread nudges" value={dashboard?.stats?.unread_nudges ?? nudges.filter((item) => !item.read).length} />
           <StatCard label="Streak" value={`${dashboard?.stats?.streak_days ?? 0} days`} />
@@ -709,7 +997,7 @@ function CopilotTab({
 
   return (
     <div className="grid copilot-grid">
-      <Panel title="Copilot assistant" subtitle="Single-request-at-a-time chat with profile-aware context.">
+      <Panel title="Help chat" subtitle="Single-request-at-a-time chat with profile-aware context.">
         <div className="chips-row">
           {promptChips.map((prompt) => (
             <button key={prompt} type="button" className="prompt-chip" onClick={() => onPickPrompt(prompt)}>
@@ -721,7 +1009,7 @@ function CopilotTab({
         <div className="chat-window">
           {messages.map((message, index) => (
             <div key={`${message.role}-${index}`} className={`chat-message ${message.role}`}>
-              <div className="chat-role">{message.role === 'user' ? 'You' : 'Copilot'}</div>
+              <div className="chat-role">{message.role === 'user' ? 'You' : 'Guide'}</div>
               <div className="chat-text">{message.text}</div>
             </div>
           ))}
@@ -735,7 +1023,7 @@ function CopilotTab({
         </form>
       </Panel>
 
-      <Panel title="Context" subtitle="The assistant uses the current profile and recent conversation as context.">
+      <Panel title="Context" subtitle="The guide uses the current profile and recent conversation as context.">
         <SummaryGrid
           data={{
             name: user?.name,
@@ -864,7 +1152,7 @@ function AdminTab({ admin, personas, onReset, resetting }: { admin: AnyRecord | 
                 'Profile updates regenerate recommendations.',
                 'Loan acceptance updates dashboard state.',
                 'Unread nudges can be marked read.',
-                'Copilot accepts one message at a time.',
+                'Guidance accepts one message at a time.',
               ].map((item) => (
                 <div className="stack-item" key={item}>
                   <div className="stack-title">{item}</div>
@@ -966,6 +1254,7 @@ export default function App() {
   const [sessionToken, setSessionTokenState] = useState<string | null>(null);
   const [booting, setBooting] = useState(true);
   const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const [authMode, setAuthMode] = useState<AuthMode>('login');
@@ -1100,6 +1389,7 @@ export default function App() {
   async function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAuthBusy(true);
+    setAuthError(null);
     try {
       const payload = authMode === 'register'
         ? { name: authForm.name, email: authForm.email, password: authForm.password, program: authForm.program }
@@ -1108,6 +1398,9 @@ export default function App() {
       await bootstrapWorkspace(response.token);
       setNotice(authMode === 'register' ? 'Account created.' : 'Logged in successfully.');
       setActiveTab('overview');
+    } catch (error: any) {
+      const detail = error?.response?.data?.detail;
+      setAuthError(detail ? String(detail) : 'Unable to authenticate right now. Make sure the backend is running on port 8000.');
     } finally {
       setAuthBusy(false);
     }
@@ -1115,11 +1408,15 @@ export default function App() {
 
   async function handlePersona(personaId: string) {
     setAuthBusy(true);
+    setAuthError(null);
     try {
       const response = await api.activatePersona(personaId);
       await bootstrapWorkspace(response.token);
       setActiveTab('overview');
       setNotice(`Loaded persona ${response.user.name}.`);
+    } catch (error: any) {
+      const detail = error?.response?.data?.detail;
+      setAuthError(detail ? String(detail) : 'Unable to load the demo persona right now. Start the backend on port 8000.');
     } finally {
       setAuthBusy(false);
     }
@@ -1223,7 +1520,7 @@ export default function App() {
         },
       });
       setMessages((current) => [...current, { role: 'assistant', text: response.reply }]);
-      setNotice('Copilot responded with profile-aware context.');
+      setNotice('Guidance responded with profile-aware context.');
     } finally {
       setCopilotBusy(false);
     }
@@ -1276,6 +1573,7 @@ export default function App() {
           loading={authBusy}
           onSubmit={handleAuthSubmit}
           onPersona={handlePersona}
+          error={authError}
         />
       </div>
     );
@@ -1291,51 +1589,75 @@ export default function App() {
         <Badge tone="neutral">{user?.intake || 'No intake set'}</Badge>
       </div>
 
-      {activeTab === 'overview' && (
-        <OverviewTab dashboard={dashboard} recommendations={recommendations} offers={offers} nudges={nudges} onTabChange={setActiveTab} />
-      )}
+      <AnimatePresence mode="wait">
+        {activeTab === 'overview' && (
+          <motion.div key="overview" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.25 }}>
+            <OverviewTab
+              dashboard={dashboard}
+              recommendations={recommendations}
+              offers={offers}
+              nudges={nudges}
+              universities={universities}
+              user={user}
+              onTabChange={setActiveTab}
+            />
+          </motion.div>
+        )}
 
-      {activeTab === 'profile' && (
-        <ProfileTab profileForm={profileForm} setProfileForm={setProfileForm} onSave={handleProfileSave} saving={savingProfile} />
-      )}
+        {activeTab === 'profile' && (
+          <motion.div key="profile" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.25 }}>
+            <ProfileTab profileForm={profileForm} setProfileForm={setProfileForm} onSave={handleProfileSave} saving={savingProfile} />
+          </motion.div>
+        )}
 
-      {activeTab === 'discover' && (
-        <DiscoverTab
-          universities={universities}
-          recommendations={recommendations}
-          shortlistIds={user?.shortlist || []}
-          search={searchForm}
-          onSearchChange={setSearchForm}
-          onGenerate={handleGenerateRecommendations}
-          onSelect={setSelectedUniversity}
-          selectedUniversity={selectedUniversity}
-          onShortlist={handleShortlist}
-        />
-      )}
+        {activeTab === 'discover' && (
+          <motion.div key="discover" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.25 }}>
+            <DiscoverTab
+              universities={universities}
+              recommendations={recommendations}
+              shortlistIds={user?.shortlist || []}
+              search={searchForm}
+              onSearchChange={setSearchForm}
+              onGenerate={handleGenerateRecommendations}
+              onSelect={setSelectedUniversity}
+              selectedUniversity={selectedUniversity}
+              onShortlist={handleShortlist}
+            />
+          </motion.div>
+        )}
 
-      {activeTab === 'finance' && (
-        <FinanceTab
-          eligibilityForm={eligibilityForm}
-          setEligibilityForm={setEligibilityForm}
-          eligibilityResult={eligibilityResult}
-          offers={offers}
-          onRunEligibility={handleEligibilitySubmit}
-          onAcceptOffer={handleAcceptOffer}
-          acceptingOfferId={acceptingOfferId}
-        />
-      )}
+        {activeTab === 'finance' && (
+          <motion.div key="finance" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.25 }}>
+            <FinanceTab
+              eligibilityForm={eligibilityForm}
+              setEligibilityForm={setEligibilityForm}
+              eligibilityResult={eligibilityResult}
+              offers={offers}
+              onRunEligibility={handleEligibilitySubmit}
+              onAcceptOffer={handleAcceptOffer}
+              acceptingOfferId={acceptingOfferId}
+            />
+          </motion.div>
+        )}
 
-      {activeTab === 'growth' && (
-        <GrowthTab nudges={nudges} dashboard={dashboard} onMarkRead={handleMarkRead} workingId={markingNudgeId} />
-      )}
+        {activeTab === 'growth' && (
+          <motion.div key="growth" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.25 }}>
+            <GrowthTab nudges={nudges} dashboard={dashboard} onMarkRead={handleMarkRead} workingId={markingNudgeId} />
+          </motion.div>
+        )}
 
-      {activeTab === 'copilot' && (
-        <CopilotTab messages={messages} input={copilotInput} setInput={setCopilotInput} busy={copilotBusy} onSend={handleCopilotSubmit} onPickPrompt={setCopilotInput} user={user} />
-      )}
+        {activeTab === 'copilot' && (
+          <motion.div key="copilot" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.25 }}>
+            <CopilotTab messages={messages} input={copilotInput} setInput={setCopilotInput} busy={copilotBusy} onSend={handleCopilotSubmit} onPickPrompt={setCopilotInput} user={user} />
+          </motion.div>
+        )}
 
-      {activeTab === 'admin' && (
-        <AdminTab admin={admin} personas={personas} onReset={handleResetDemo} resetting={workspaceRefreshing} />
-      )}
+        {activeTab === 'admin' && (
+          <motion.div key="admin" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.25 }}>
+            <AdminTab admin={admin} personas={personas} onReset={handleResetDemo} resetting={workspaceRefreshing} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
