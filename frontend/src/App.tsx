@@ -326,7 +326,7 @@ function AuthLanding({
               {mode === 'register' && (
                 <label>
                   Name
-                  <input value={authForm.name} onChange={(event) => setAuthForm({ ...authForm, name: event.target.value })} placeholder="Aarav Sharma" />
+                  <input value={authForm.name} onChange={(event) => setAuthForm({ ...authForm, name: event.target.value })} placeholder="Anushka Sharma" />
                 </label>
               )}
               <label>
@@ -439,7 +439,7 @@ function OverviewTab({
   const testimonials = [
     {
       quote: 'Feels like the product team spent the entire sprint obsessing over every pixel.',
-      name: 'Aarav, MS CS applicant',
+      name: 'Anushka, MS CS applicant',
     },
     {
       quote: 'The funding and admissions flow is presented like a premium fintech dashboard.',

@@ -5,7 +5,7 @@ GradPath is a full-stack AI-assisted platform for university discovery, financin
 ## What is included
 
 - Authentication, profiles, and persistent sessions
-- Demo personas for quick setup: Aarav, Meera, and Riya
+- Demo personas for quick setup: Anushka, Arnav, and Riya
 - University discovery with search, filters, shortlist, and details
 - Recommendations based on profile inputs such as CGPA, GRE, budget, and preferred countries
 - Financing tools including loan eligibility, EMI planning, and loan offers
@@ -79,7 +79,7 @@ npm run build
 
 ## Demo data
 
-- Personas: Aarav, Meera, Riya
+- Personas: Anushka, Arnav, Riya
 - Universities: Toronto, TU Munich, Melbourne, ASU, Dublin, NUS
 - Loan offers: three seeded lender options
 - Nudges: scholarship, deadline, and funding reminders

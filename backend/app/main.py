@@ -65,9 +65,15 @@ Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title=settings.app_name, version="1.0.0")
 
+allowed_origins = {settings.frontend_origin}
+if "localhost" in settings.frontend_origin:
+    allowed_origins.add(settings.frontend_origin.replace("localhost", "127.0.0.1"))
+if "127.0.0.1" in settings.frontend_origin:
+    allowed_origins.add(settings.frontend_origin.replace("127.0.0.1", "localhost"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_origin],
+    allow_origins=sorted(allowed_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

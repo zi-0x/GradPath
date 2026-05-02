@@ -73,16 +73,16 @@ def test_demo_personas():
     assert response.status_code == 200
     personas = response.json()
     assert len(personas) == 3
-    assert any(p["id"] == "aarav" for p in personas)
+    assert any(p["id"] == "anushka" for p in personas)
 
 
 def test_activate_persona():
     """Test persona activation."""
-    response = client.post("/api/v1/demo/personas/aarav/activate")
+    response = client.post("/api/v1/demo/personas/anushka/activate")
     assert response.status_code == 200
     data = response.json()
     assert data["token"]
-    assert data["user"]["name"] == "Aarav Sharma"
+    assert data["user"]["name"] == "Anushka Sharma"
 
 
 def test_get_user_profile():

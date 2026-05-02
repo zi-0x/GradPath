@@ -37,9 +37,9 @@ ADMIN_STATS = {
 
 PERSONA_LIBRARY = [
     {
-        "id": "aarav",
-        "name": "Aarav Sharma",
-        "email": "aarav@gradpath.demo",
+        "id": "anushka",
+        "name": "Anushka Sharma",
+        "email": "anushka@gradpath.demo",
         "password": "demo1234",
         "program": "MS Computer Science",
         "cgpa": 8.6,
@@ -53,9 +53,9 @@ PERSONA_LIBRARY = [
         "gre": 321,
     },
     {
-        "id": "meera",
-        "name": "Meera Iyer",
-        "email": "meera@gradpath.demo",
+        "id": "arnav",
+        "name": "Arnav",
+        "email": "arnav@gradpath.demo",
         "password": "demo1234",
         "program": "Master of Data Science",
         "cgpa": 8.9,
